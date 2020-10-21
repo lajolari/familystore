@@ -9,6 +9,10 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
+STRIPE_API_KEY_PUBLISHABLE = "pk_test_51HeXlCLYcIyKG3IJ3kAzBmhkLA1P796AVUmhFHMlWVxa201UqBDFM2rUpZQmWQr9DYtXgi8jj7ArG2xnyHVPCL6X00CtTN2pfE"
+STRIPE_API_KEY_HIDDEN = "sk_test_51HeXlCLYcIyKG3IJpDjeQa9gK0y5XLUam56BoFIkgmngt2lzZHwdUXGSVrZchMWjDYW4PTXW0I7ANEAxkwXentrE00sAvoa4sr"
+
+import os
 
 from pathlib import Path
 
@@ -44,6 +48,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.store',
     'apps.cart',
+    'apps.order',
 ]
 
 MIDDLEWARE = [
@@ -70,6 +75,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'apps.store.context_processors.menu_categories',
+                'apps.cart.context_processors.cart',
             ],
         },
     },
@@ -126,3 +132,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, 'static')
+]
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
