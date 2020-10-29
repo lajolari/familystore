@@ -4,7 +4,7 @@ from apps.store.models import Product
 
 def frontpage(request):
     products = Product.objects.all()
-
+    print(products)
     context = {
         'products': products
     }

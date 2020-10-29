@@ -29,10 +29,26 @@
                             <td>[[ numItems ]]</td>
                             <td>[[ totalCost ]]</td>
                         </tr>
+                        <tr v-if="coupon_value">
+                            <td colspan="3">Total cost with coupon:</td>
+                            <td>[[ totalCostWithCoupon ]]</td>
+                        </tr>
                     </tfoot>
                 </table>
+
+                <hr>
+
+                <input type="hidden" v-model="coupon_value"><br>
+
+                Coupon Code: <br>
+
+                <input type="text" v-model="coupon_code"><br>
+
+                <button @click="applyCoupon()">Apply</button>
+
+                <hr>
             </div>
-            <form v-on:submit.prevent="submitForm()">
+            <form v-on:submit.prevent="buy()">
                 <div class="field">
                     <div class="control">
                         <label>Nombre</label>
@@ -71,7 +87,7 @@
                 </div>
                 <div class="field">
                     <div class="control">
-                        <button class="button is-primary">Checkout</button>
+                        <button class="button is-primary">Check out</button>
                     </div>
                 </div>
             </form>
@@ -81,10 +97,23 @@
             <p>Tu carrito esta vacio!</p>
         {% endif %}
 
+        <div v-if="errors.length > 0">
+            <article class="message is-danger" v-for="error in errors">
+                <div class="message-header">
+                    <p>Error</p>
+                </div>
+                <div class="message-body">
+                    [[ error ]]
+                </div>
+            </article>
+        </div>
+
+        
     </div>    
 {% endblock%}
 
 {% block scripts %}
+<script type="application/javascript" src="https://js.stripe.com/v3/"></script>
 <script>
     var productapp = new Vue({
         el: '#cartapp',
@@ -92,13 +121,16 @@
         store: store,
         data () {
             return {
+                errors: [],
                 first_name: '',
                 last_name: '',
                 email: '',
                 address: '',
                 zipcode: '',
                 place: '',
-                products: [{{ productsstring|safe }}]
+                products: [{{ productsstring|safe }}],
+                coupon_value: 0,
+                coupon_code: ''
             }
         },
         computed: {
@@ -107,12 +139,34 @@
             },
             totalCost: function(){
                 return store.state.totalCost;
+            },
+            totalCostWithCoupon: function() {
+                if (this.coupon_value > 0) {
+                    return store.state.totalCost * (parseInt(this.coupon_value) / 100)
+                } else {
+                    return store.state.totalCost;
+                }
             }
         },
         methods: {
-            submitForm(){
-                console.log("Submit Form");
-
+            applyCoupon(){
+                if (this.coupon_code !== '') {
+                    fetch('/api/can_use/?coupon_code=' + this.coupon_code, {
+                        method: 'GET'
+                    })
+                    .then((response) => {
+                        return response.json();
+                    })
+                    .then((data) => {
+                        if (data.amount) {
+                            this.coupon_value = parseInt(data.amount)
+                        } else {
+                            this.coupon_value = 0
+                        }
+                    });
+                }
+            },
+            buy() {
                 var data = {
                     'first_name': this.first_name,
                     'last_name': this.last_name,
@@ -120,26 +174,64 @@
                     'address': this.address,
                     'zipcode': this.zipcode,
                     'place': this.place,
+                    'coupon_code': this.coupon_code
                 };
+
+                this.errors = [];
+
+                if(data.first_name === ''){
+                    this.errors.push('El Nombre no puede quedar vacio')
+                }
+
+                if(data.last_name === ''){
+                    this.errors.push('El Apellido no puede quedar vacio')
+                }
+
+                if(data.email === ''){
+                    this.errors.push('El Correo no puede quedar vacio')
+                }
+
+                if(data.address === ''){
+                    this.errors.push('La Direccion no puede quedar vacio')
+                }
+
+                if(data.zipcode === ''){
+                    this.errors.push('El Codigo Postal no puede quedar vacio')
+                }
+
+                if(data.place === ''){
+                    this.errors.push('El Lugar no puede quedar vacio')
+                }
+
+                if (this.errors.length === 0) {
+                    var stripe = Stripe('{{ pub_key }}');
+
+                    fetch('/api/create_checkout_session', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify(data),
+                    })
+                    .then(function(response) {
+                        return response.json()
+                    })
+                    .then(function(session) {
+                        return stripe.redirectToCheckout({ sessionId: session.session.id })
+                    })
+                    .then(function(result) {
+                        if(result.error) {
+                            alert(result.error.message)
+                        }
+                    })
+                    .catch(function(error) {
+                        console.log('error', error);
+                    })
+                }
+
                 
-                fetch('/api/checkout/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify(data)
-                })
-                .then((response) => {
-                    console.log('Success');
-                    window.location.href = '/';
-                })
-                
-                .catch(function (error) {
-                    console.log('Error 2');
-                    console.log(error);
-                })
             },
             incrementQuantity(product_id, quantity, price){
                 var data = {
