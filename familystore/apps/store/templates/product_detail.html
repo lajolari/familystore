@@ -4,7 +4,7 @@
 
 {% block content %}
     <div id="productapp">
-        <img src="/{{ product.image }}">
+        <img src="/media/{{ product.image }}">
         <hr>
         <h1 class="title">{{ product.title }}</h1>
         <h2 class="subtitle">{{product.price}}</h2>
@@ -13,6 +13,12 @@
             <p>{{ product.description }}</p>
         {% endif %}
         <button @click="addToCart({{ product.id }})" > Agregar </button>
+
+        <article class="message is-success" v-if="showMessage">
+            <div class="message-body">
+                El producto fue agregado al carrito
+            </div>
+        </article>
     </div>
 {% endblock%}
 
@@ -24,7 +30,7 @@
         store: store,
         data () {
             return {
-
+                showMessage: false
             }
         },
         mounted(){
@@ -50,7 +56,13 @@
                     body: JSON.stringify(data)
                 })
                 .then((response) => {
+                    this.showMessage = true;
+                
                     store.commit('increment', 1);
+                
+                    setTimeout(() => {
+                        this.showMessage = false
+                    }, 2000)
                 })
                 
                 .catch(function (error) {
