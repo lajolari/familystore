@@ -9,9 +9,10 @@ class Order(models.Model):
 
     STATUS_CHOICES = (
         (ORDERED, 'Ordered'),
-        (SHIPPED, ' Shipped'),
+        (SHIPPED, 'Shipped'),
         (ARRIVED, 'Arrived')
     )
+
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.CharField(max_length=100)
@@ -32,10 +33,10 @@ class Order(models.Model):
 
     def __str__(self):
         return '%s' % self.first_name
-
+    
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, related_name='items', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='items', on_delete=models.DO_NOTHING)
     price = models.FloatField()
     quantity = models.IntegerField(default=1)
 

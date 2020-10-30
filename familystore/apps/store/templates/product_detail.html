@@ -1,18 +1,19 @@
 {% extends 'base.html' %}
 
-{% block title %} {{ product.title }} | {%endblock%}
+{% block title %}{{ product.title }} | {% endblock %}
 
 {% block content %}
     <div id="productapp">
-        <img src="/media/{{ product.image }}">
+        <img src="{{ product.image.url }}">
         <hr>
         <h1 class="title">{{ product.title }}</h1>
-        <h2 class="subtitle">{{product.price}}</h2>
+        <h2 class="subtitle">${{ product.price }}</h2>
 
         {% if product.description %}
             <p>{{ product.description }}</p>
         {% endif %}
-        <button @click="addToCart({{ product.id }})" > Agregar </button>
+
+        <button class="button is-primary" @click="addToCart({{ product.id }})">Agregar al carrito</button>
 
         <article class="message is-success" v-if="showMessage">
             <div class="message-body">
@@ -20,7 +21,7 @@
             </div>
         </article>
     </div>
-{% endblock%}
+{% endblock %}
 
 {% block scripts %}
 <script>
@@ -33,7 +34,7 @@
                 showMessage: false
             }
         },
-        mounted(){
+        mounted() {
             console.log('Mounted');
         },
         methods: {
@@ -41,11 +42,11 @@
                 console.log('Product_id:', product_id);
 
                 var data = {
-                        'product_id': product_id,
-                        'update': false,
-                        'quantity': 1
-                    };
-                console.log(data);
+                    'product_id': product_id, 
+                    'update': false,
+                    'quantity': 1
+                };
+                    
                 fetch('/api/add_to_cart/', {
                     method: 'POST',
                     headers: {
@@ -56,21 +57,22 @@
                     body: JSON.stringify(data)
                 })
                 .then((response) => {
-                    this.showMessage = true;
-                
+                    console.log(response)
+
+                    this.showMessage = true
+
                     store.commit('increment', 1);
-                
+
                     setTimeout(() => {
                         this.showMessage = false
                     }, 2000)
                 })
-                
                 .catch(function (error) {
                     console.log('Error 2');
                     console.log(error);
                 })
             }
         }
-    })
+    });
 </script>
 {% endblock %}

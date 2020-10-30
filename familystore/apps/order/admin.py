@@ -14,10 +14,10 @@ def admin_order_shipped(modeladmin, request, queryset):
         order.shipped_date = datetime.datetime.now()
         order.status = Order.SHIPPED
         order.save()
-    return
-admin_order_shipped.short_description = 'Set Shipped'
+    return 
+admin_order_shipped.short_description = 'Set shipped'
 
-class OrderItemInLine(admin.TabularInline):
+class OrderItemInline(admin.TabularInline):
     model = OrderItem
     raw_id_fields = ['product']
 
@@ -25,11 +25,8 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ['id', order_name, 'status', 'created_at']
     list_filter = ['created_at', 'status']
     search_fields = ['first_name', 'address']
-    inlines = [OrderItemInLine]
+    inlines = [OrderItemInline]
     actions = [admin_order_shipped]
-    
-
-
 
 admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderItem)

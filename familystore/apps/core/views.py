@@ -3,8 +3,7 @@ from django.shortcuts import render
 from apps.store.models import Product
 
 def frontpage(request):
-    products = Product.objects.all()
-    print(products)
+    products = Product.objects.filter(is_featured=True)
     context = {
         'products': products
     }
