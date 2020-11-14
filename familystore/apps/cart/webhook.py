@@ -4,8 +4,7 @@ import stripe
 from django.conf import settings
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
+from apps.store.utilities import decrement_product_quantity, send_order_confirmation
 
 from .cart import Cart
 
@@ -34,12 +33,8 @@ def webhook(request):
         order.paid = True
         order.save()
 
-        for item in order.items.all():
-            product = item.product
-            product.num_available = product.num_available - item.quantity
-            product.save()
+        decrement_product_quantity(order)
 
-        html = render_to_string('order_confirmation.html', {'order': order})
-        send_mail('Confirmacion de la Orden', 'Su pedido ha sido recibido exitosamente', 'leolama18@gmail.com', ['leolama18@gmail.com', order.email], fail_silently=False, html_message=html)
+        send_order_confirmation(order)
 
     return HttpResponse(status=200)

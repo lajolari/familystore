@@ -12,6 +12,12 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 STRIPE_API_KEY_PUBLISHABLE = "pk_test_51HeXlCLYcIyKG3IJ3kAzBmhkLA1P796AVUmhFHMlWVxa201UqBDFM2rUpZQmWQr9DYtXgi8jj7ArG2xnyHVPCL6X00CtTN2pfE"
 STRIPE_API_KEY_HIDDEN = "sk_test_51HeXlCLYcIyKG3IJpDjeQa9gK0y5XLUam56BoFIkgmngt2lzZHwdUXGSVrZchMWjDYW4PTXW0I7ANEAxkwXentrE00sAvoa4sr"
 
+RAZORPAY_API_KEY_PUBLISHABLE = "rzp_test_kQZ3a5pqnMF9Mk"
+RAZORPAY_API_KEY_HIDDEN = "xtUhqgbD39QQPj5GncwpTumj"
+
+PAYPAL_API_KEY_PUBLISHABLE = "AeeqVXgVZQhLtVs8-Njb3xm7hyDDSuVbkEJdnzSrbwYY5Mu8AmffOBc_Fz-_4sueC_DfvrGpfD9mk3Py"
+PAYPAL_API_KEY_HIDDEN = "ENEnxcQNUq9PvCqTjYaOz1fxjSKSy_B3bH_kzXB7YZsbEOl2vrw2nwN4vfHoChqK4ODBgnD95SaXkluM"
+
 import os
 
 from pathlib import Path
@@ -34,6 +40,10 @@ ALLOWED_HOSTS = []
 EMAIL_HOST = 'localhost'
 EMAIL_PORT = 1025
 
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'cart'
+LOGOUT_REDIRECT_URL = 'frontpage'
+
 # Cart
 
 SESSION_COOKIE_AGE = 86400
@@ -54,6 +64,8 @@ INSTALLED_APPS = [
     'apps.cart',
     'apps.order',
     'apps.coupon',
+    'apps.userprofile',
+    'apps.newsletter',
 ]
 
 MIDDLEWARE = [

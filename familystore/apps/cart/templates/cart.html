@@ -8,8 +8,9 @@
         {% if cart %}
         <div v-if="products.length > 0">
             <div class="table">
-                <table class="table">
+                <table class="table is-fullwidth is-striped">
                     <thead>
+                        <th></th>
                         <th>Producto</th>
                         <th>Quantity</th>
                         <th>Price</th>
@@ -29,14 +30,16 @@
                             </td>
                             <td><button @click="decrementQuantity(product.id, product.quantity, product.price)">-</button> [[ product.quantity ]] <button @click="incrementQuantity(product.id, product.quantity, product.price)">+</button></td>
                             <td>[[ product.total_price]]</td>
-                            <!-- <td><button @click="removeFromCart(product.id)">Quitar del Carrito</button></td> -->
+                            <td><button @click="removeFromCart(product.id)" class="button is-danger">Quitar</button></td>
                         </tr>
                     </tbody>
                     <tfoot>
                         <tr>
                             <td>Total cost:</td>
+                            <td></td>
                             <td>[[ numItems ]]</td>
                             <td>[[ totalCost ]]</td>
+                            <td></td>
                         </tr>
                         <tr v-if="coupon_value">
                             <td colspan="3">Total cost with coupon:</td>
@@ -47,59 +50,92 @@
 
                 <hr>
 
-                <input type="hidden" v-model="coupon_value"><br>
+                <input type="hidden" v-model="coupon_value">
 
-                Coupon Code: <br>
+                <h2 class="subtitle">Codigo del Cupon</h2>
 
-                <input type="text" v-model="coupon_code"><br>
-
-                <button @click="applyCoupon()">Apply</button>
+                <div class="field has-addons">
+                    <div class="control">
+                        <input type="text" v-model="coupon_code" class="input">
+                    </div>
+                    <div class="control">
+                        <button @click="applyCoupon()" class="button is-success">Aplicar</button>
+                    </div>
+                </div>
+                <div class="notification is-warning" v-if="showCouponCodeError">
+                    <p>El codigo del cupon no es valido</p>
+                </div>
 
                 <hr>
             </div>
-            <form v-on:submit.prevent="buy()">
-                <div class="field">
-                    <div class="control">
+
+            {% if not request.user.is_authenticated %}
+
+                <p>Seguir como invitado o <a href="{% url 'login' %}">Inicie Sesion</a> / <a href="{% url 'signup' %}">Registrese</a>.</p>
+
+                <hr>
+
+            {% endif %}
+
+
+            
+            <h2 class="title">Informacion de Contacto</h2>
+            <div class="columns">
+                <div class="column is-6">
+                    <div class="field">
                         <label>Nombre</label>
-                        <input type="text" name='first_name' v-model='first_name'>
+                        <div class="control">
+                            <input type="text" class="input" name='first_name' v-model='first_name'>
+                        </div>
                     </div>
-                </div>
-                <div class="field">
-                    <div class="control">
+                    <div class="field">
                         <label>Apellido</label>
-                        <input type="text" name='last_name' v-model='last_name'>
+                        <div class="control">
+                            <input type="text" class="input" name='last_name' v-model='last_name'>
+                        </div>
                     </div>
-                </div>
-                <div class="field">
-                    <div class="control">
+                    <div class="field">
                         <label>Correo</label>
-                        <input type="email" name='email' v-model='email'>
+                        <div class="control">
+                            <input type="email" class="input" name='email' v-model='email'>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Correo</label>
+                        <div class="control">
+                            <input type="text" class="input" name='phone' v-model='phone'>
+                        </div>
                     </div>
                 </div>
-                <div class="field">
-                    <div class="control">
+                <div class="column is-6">
+                    <div class="field">
                         <label>Direccion</label>
-                        <input type="text" name='address' v-model='address'>
+                        <div class="control">
+                            <input type="text" class="input" name='address' v-model='address'>
+                        </div>
                     </div>
-                </div>
-                <div class="field">
-                    <div class="control">
+                    <div class="field">
                         <label>Codigo Postal</label>
-                        <input type="text" name='zipcode' v-model='zipcode'>
+                        <div class="control">
+                            <input type="text" class="input" name='zipcode' v-model='zipcode'>
+                        </div>
                     </div>
-                </div>
-                <div class="field">
-                    <div class="control">
+                    <div class="field">
                         <label>Lugar</label>
-                        <input type="text" name='place' v-model='place'>
+                        <div class="control">
+                            <input type="text" class="input" name='place' v-model='place'>
+                        </div>
                     </div>
                 </div>
-                <div class="field">
-                    <div class="control">
-                        <button class="button is-primary">Check out</button>
-                    </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <button class="button is-primary" v-on:click="buy('stripe')">Pagar con Stripe</button>
+                    <button class="button is-primary" v-on:click="buy('razorpay')">Pagar con Razorpay</button>
+                    <div id="paypal-button-container" class="mt-4"></div>
                 </div>
-            </form>
+            </div>
+            
         </div>
         <p v-else>Tu carrito esta vacio!</p>
         {% else %}
@@ -123,6 +159,8 @@
 
 {% block scripts %}
 <script type="application/javascript" src="https://js.stripe.com/v3/"></script>
+<script type="application/javascript" src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script type="application/javascript" src="https://www.paypal.com/sdk/js?client-id={{ pub_key_paypal }}"></script>
 <script>
     var productapp = new Vue({
         el: '#cartapp',
@@ -131,16 +169,72 @@
         data () {
             return {
                 errors: [],
-                first_name: '',
-                last_name: '',
-                email: '',
-                address: '',
-                zipcode: '',
-                place: '',
+                first_name: '{{ first_name }}',
+                last_name: '{{ last_name }}',
+                email: '{{ email }}',
+                address: '{{ address }}',
+                zipcode: '{{ zipcode }}',
+                place: '{{ place }}',
+                phone: '{{ phone }}',
                 products: [{{ productsstring|safe }}],
                 coupon_value: 0,
-                coupon_code: ''
+                coupon_code: '',
+                showCouponCodeError: false
             }
+        },
+        mounted() {
+            const amount = this.totalCostWithCoupon.toString();
+
+            paypal.Buttons({
+                onClick: () => {
+                    if (this.validateForm() > 0) {
+                        return false;
+                    }
+                },
+                createOrder: function(data, actions) {
+                    return actions.order.create({
+                        purchase_units: [{
+                            amount: {
+                                value: amount
+                            }
+                        }]
+                    })
+                },
+                onApprove: (data, actions) => {
+                    const formdata = {
+                        'first_name': this.first_name,
+                        'last_name': this.last_name,
+                        'email': this.email,
+                        'address': this.address,
+                        'zipcode': this.zipcode,
+                        'place': this.place,
+                        'phone': this.phone,
+                        'coupon_code': this.coupon_code,
+                        'gateway': 'paypal',
+                        'order_id': data.orderID,
+                    };
+                    return actions.order.capture().then(function(details) {
+                        fetch('/api/create_checkout_session', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify(formdata),
+                        })
+                        .then(function(response) {
+                            return response.json()
+                        })
+                        .then(function(result) {
+                            window.location.href = '/cart/success/';
+                        })
+                        .catch(function(error) {
+                            console.log('error:', error);
+                        })
+                    })
+                }
+            }).render('#paypal-button-container');
         },
         computed: {
             numItems: function() {
@@ -158,6 +252,39 @@
             }
         },
         methods: {
+            validateForm() {
+                this.errors = [];
+
+                if(this.first_name === ''){
+                    this.errors.push('El Nombre no puede quedar vacio')
+                }
+
+                if(this.last_name === ''){
+                    this.errors.push('El Apellido no puede quedar vacio')
+                }
+
+                if(this.email === ''){
+                    this.errors.push('El Correo no puede quedar vacio')
+                }
+
+                if(this.phone === ''){
+                    this.errors.push('El Numero Telefonico no puede quedar vacio')
+                }
+
+                if(this.address === ''){
+                    this.errors.push('La Direccion no puede quedar vacio')
+                }
+
+                if(this.zipcode === ''){
+                    this.errors.push('El Codigo Postal no puede quedar vacio')
+                }
+
+                if(this.place === ''){
+                    this.errors.push('El Lugar no puede quedar vacio')
+                }
+
+                return this.errors.length
+            },
             applyCoupon(){
                 if (this.coupon_code !== '') {
                     fetch('/api/can_use/?coupon_code=' + this.coupon_code, {
@@ -168,14 +295,18 @@
                     })
                     .then((data) => {
                         if (data.amount) {
+                            this.showCouponCodeError = false
                             this.coupon_value = parseInt(data.amount)
                         } else {
                             this.coupon_value = 0
+                            this.showCouponCodeError = true
                         }
                     });
+                } else {
+                    this.showCouponCodeError = true
                 }
             },
-            buy() {
+            buy(gateway) {
                 var data = {
                     'first_name': this.first_name,
                     'last_name': this.last_name,
@@ -183,64 +314,103 @@
                     'address': this.address,
                     'zipcode': this.zipcode,
                     'place': this.place,
-                    'coupon_code': this.coupon_code
+                    'phone': this.phone,
+                    'coupon_code': this.coupon_code,
+                    'gateway': gateway
                 };
 
-                this.errors = [];
+                if (this.validateForm() === 0) {
+                    if (gateway === 'stripe') {
+                        var stripe = Stripe('{{ pub_key }}');
 
-                if(data.first_name === ''){
-                    this.errors.push('El Nombre no puede quedar vacio')
-                }
+                        fetch('/api/create_checkout_session', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify(data),
+                        })
+                        .then(function(response) {
+                            return response.json()
+                        })
+                        .then(function(session) {
+                            return stripe.redirectToCheckout({ sessionId: session.session.id })
+                        })
+                        .then(function(result) {
+                            if(result.error) {
+                                alert(result.error.message)
+                            }
+                        })
+                        .catch(function(error) {
+                            console.log('error', error);
+                        })
+                    } else if (gateway === 'razorpay') {
+                        fetch('/api/create_checkout_session', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify(data),
+                        })
+                        .then(function(response) {
+                            return response.json()
+                        }).then(function(result) {
+                            const order_id = result.order.id;
+                            const amount = result.order.amount;
 
-                if(data.last_name === ''){
-                    this.errors.push('El Apellido no puede quedar vacio')
-                }
-
-                if(data.email === ''){
-                    this.errors.push('El Correo no puede quedar vacio')
-                }
-
-                if(data.address === ''){
-                    this.errors.push('La Direccion no puede quedar vacio')
-                }
-
-                if(data.zipcode === ''){
-                    this.errors.push('El Codigo Postal no puede quedar vacio')
-                }
-
-                if(data.place === ''){
-                    this.errors.push('El Lugar no puede quedar vacio')
-                }
-
-                if (this.errors.length === 0) {
-                    var stripe = Stripe('{{ pub_key }}');
-
-                    fetch('/api/create_checkout_session', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        },
-                        credentials: 'same-origin',
-                        body: JSON.stringify(data),
-                    })
-                    .then(function(response) {
-                        return response.json()
-                    })
-                    .then(function(session) {
-                        return stripe.redirectToCheckout({ sessionId: session.session.id })
-                    })
-                    .then(function(result) {
-                        if(result.error) {
-                            alert(result.error.message)
-                        }
-                    })
-                    .catch(function(error) {
-                        console.log('error', error);
-                    })
-                }
-
-                
+                            var options = {
+                                'key': '{{ pub_key_razorpay }}',
+                                'amount': amount,
+                                'currency': 'INR',
+                                'name': 'Family Store',
+                                'description': 'Una tienda familiar',
+                                'order_id': order_id,
+                                'handler': function(res){
+                                    fetch('/api/validate_payment/', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRFToken': '{{ csrf_token }}'
+                                        },
+                                        credentials: 'same-origin',
+                                        body: JSON.stringify({
+                                            'razorpay_payment_id': res.razorpay_payment_id,
+                                            'razorpay_order_id': res.razorpay_order_id,
+                                            'razorpay_signature': res.razorpay_signature
+                                        }),
+                                    })
+                                    .then(function(response) {
+                                        return response.json();
+                                    })
+                                    .then(function(result) {
+                                        window.location.href = '/cart/success/';
+                                    })
+                                    .catch(function(error) {
+                                        console.log('Error:', error);
+                                    })
+                                },
+                                'prefill': {
+                                    'name': data.first_name + ' ' + data.last_name,
+                                    'email': data.email,
+                                    'contact': data.phone
+                                },
+                                'theme': {
+                                    'color': '#333333'
+                                }
+                            };
+                            var rzp = new Razorpay(options);
+                            rzp.open();
+                        })
+                        .catch(function(error) {
+                            console.log('Error', error)
+                        })
+                    }
+                    
+                } 
             },
             incrementQuantity(product_id, quantity, price){
                 for (var i = 0; i < this.products.length; i++){

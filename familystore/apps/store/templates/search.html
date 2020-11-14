@@ -6,30 +6,72 @@
     <h1 class="title">Busqueda</h1>
     <h2 class="subtitle">Parametros de busqueda: "{{ query }}"</h2>
 
-    <div class="columns is-multiline">
-        {% for product in products %}
-            <div class="column is-3">
-                <div class="card">
-                    <div class="card-image">
-                        <figure class="image">
-                            <img src="{{ product.thumbnail.url }}">
-                        </figure>
-                    </div>
-                    
-                    <div class="card-content">
-                        <div class="media">
-                            <div class="media-content">
-                                <p class="title is-4">{{ product.title }}</p>
-                                <p class="subtitle is-6">${{ product.price }}</p>
-                            </div>
-                        </div>
-                    </div>
+    <hr>
 
-                    <footer class="card-footer">
-                        <a href="{% url 'product_detail' product.category.slug product.slug %}" class="card-footer-item">Ver Mas</a>
-                    </footer>
+    <form action="{% url 'search' %}" method="get">
+        <div class="columns is-multiline">
+            <div class="column is-4">
+                <h2 class="is-size-5">Busqueda Avanzada</h2>
+
+                <div class="field">
+                    <label>Parametros de Busqueda</label>
+                    <div class="control">
+                        <input type="text" name="query" id="{{ query }}" class="input">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>En Inventario</label>
+                    <div class="control">
+                        <input type="checkbox" name="instock" {% if instock %}checked="checked"{% endif %}>
+                    </div>
                 </div>
             </div>
-        {% endfor %}
-    </div>
+            <div class="column is-4">
+                <h2 class="is-size-5">Rango de Precios</h2>
+
+                <div class="field">
+                    <label>Desde</label>
+                    <div class="control">
+                        <input type="number" name="price_from" class="input" value="{{ price_from }}">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label>Hasta</label>
+                    <div class="control">
+                        <input type="number" name="price_to" class="input" value="{{ price_to }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="column is-4">
+                <h2 class="is-size-5">Ordenar Por</h2>
+                <div class="field">
+                    <label>Seleccionar el tipo de ordenamiento</label>
+                    <div class="control">
+                        <div class="select">
+                            <select name="sorting">
+                                <option value="-date_added" {% if sorting == '-date_added' %} selected {% endif %} >Mas Recientes</option>
+                                <option value="price" {% if sorting == 'price' %} selected {% endif %}>Precio: Menor a Mayor</option>
+                                <option value="-price" {% if sorting == '-price' %} selected {% endif %}>Precio: Mayor a Menor</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="column is-12">
+                <div class="field">
+                    <div class="control">
+                        <button class="button is-success">Buscar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <hr>
+
+    {% with products as list_products %}
+        {% include 'parts/product_list.html' %}
+    {% endwith%}
 {% endblock %}

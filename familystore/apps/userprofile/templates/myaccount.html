@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1 class="title">Mi Cuenta</h1>
+
+    <a href="{% url 'logout' %}" class="button is-danger">Cerrar Cesion</a>
+
+    <hr>
+
+    <h2 class="subtitle">Informacion de la Cuenta</h2>
+
+    <p><strong>Nombre:</strong> {{ request.user.get_full_name }}</p>
+    <p><strong>E-mail:</strong> {{ request.user.email}} </p>
+    <p><strong>Direccion:</strong>{{ request.user.userprofile.address }}</p>
+    <p><strong>Codigo Postal y Direccion: </strong> {{ request.user.userprofile.zipcode }} {{ request.user.userprofile.place }} </p>
+    <p><strong>Telefono: </strong> {{ request.user.userprofile.phone }} </p>
+
+    <hr>
+
+    <h2 class="subtitle">Mis Pedidos</h2>
+
+    {% for order in request.user.orders.all %}
+        <article class="message is-light">
+            <div class="message-header">
+                <p> {{ order.created_at }} </p>
+                <p><strong>Status:</strong>{{ order.status }}</p>
+            </div>
+            <div class="message-body">
+                <table class="table is-striped is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                            <tr>
+                                <td> {{item.product.title}} </td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.price }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td>Total</td>
+                            <td>{{ order.get_total_quantity }}</td>
+                            <td>{{ order.paid_amount }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </article>
+    {% empty %}
+        <p>No tiene ordenes registradas...</p>
+    {% endfor %}
+{% endblock %}
