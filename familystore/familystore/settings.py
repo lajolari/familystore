@@ -8,7 +8,8 @@ PAYPAL_API_KEY_PUBLISHABLE = "AeeqVXgVZQhLtVs8-Njb3xm7hyDDSuVbkEJdnzSrbwYY5Mu8Am
 PAYPAL_API_KEY_HIDDEN = "ENEnxcQNUq9PvCqTjYaOz1fxjSKSy_B3bH_kzXB7YZsbEOl2vrw2nwN4vfHoChqK4ODBgnD95SaXkluM"
 
 import os
-
+from decouple import config
+import dj_database_url
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -19,10 +20,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '=5(-a&yd)p+ahfo#m9(nupuhn@a2nr5_9f*nmv!ar=!neo5r9-'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = []
 
@@ -94,10 +95,9 @@ WSGI_APPLICATION = 'familystore.wsgi.application'
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL')
+    )
 }
 
 

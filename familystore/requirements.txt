@@ -19,6 +19,7 @@ pycparser==2.20
 pyOpenSSL==19.1.0
 PyPDF2==1.26.0
 python-bidi==0.4.2
+python-decouple==3.3
 pytz==2020.1
 razorpay==1.2.0
 reportlab==3.5.55
