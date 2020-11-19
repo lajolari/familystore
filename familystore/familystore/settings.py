@@ -19,7 +19,7 @@ PAYPAL_API_KEY_PUBLISHABLE = "AeeqVXgVZQhLtVs8-Njb3xm7hyDDSuVbkEJdnzSrbwYY5Mu8Am
 PAYPAL_API_KEY_HIDDEN = "ENEnxcQNUq9PvCqTjYaOz1fxjSKSy_B3bH_kzXB7YZsbEOl2vrw2nwN4vfHoChqK4ODBgnD95SaXkluM"
 
 import os
-
+import django_heroku
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -154,3 +154,6 @@ STATICFILES_DIRS = [
 ]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Activate Django-Heroku.
+django_heroku.settings(locals())
