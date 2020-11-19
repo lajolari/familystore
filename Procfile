@@ -1,1 +1,1 @@
-web: gunicorn familystore.wsgi --log-file -
+web: gunicorn familystore.familystore.wsgi --log-file -
