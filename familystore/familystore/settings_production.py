@@ -21,6 +21,8 @@ PAYPAL_API_KEY_HIDDEN = "ENEnxcQNUq9PvCqTjYaOz1fxjSKSy_B3bH_kzXB7YZsbEOl2vrw2nwN
 import os
 import django_heroku
 from pathlib import Path
+import dj_database_url
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,10 +32,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '=5(-a&yd)p+ahfo#m9(nupuhn@a2nr5_9f*nmv!ar=!neo5r9-'
+SECRET_KEY = config('SECRET_KEY', default='=5(-a&yd)p+ahfo#m9(nupuhn@a2nr5_9f*nmv!ar=!neo5r9-')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = ['*']
 
@@ -105,8 +107,7 @@ WSGI_APPLICATION = 'familystore.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-import dj_database_url
-from decouple import config
+
 
 DATABASES = {
     'default': dj_database_url.config(
